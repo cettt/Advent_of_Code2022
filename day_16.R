@@ -24,31 +24,40 @@ bfs_mat <- unname(sapply(nm, bfs)[c("AA", names(flw[flw > 0])), c("AA", names(fl
 flw <- unname(flw[flw > 0 | names(flw) == "AA"])
 
 
-sim_flw <- function(pos, visited = integer(), rem_time, cach = FALSE, cum_prs = 0L) {
+sim_flw_bst <- function(vstd, rt) {
   
-  nxt <- seq_along(flw)[match(seq_along(flw), c(visited, pos), 0L) == 0L]
-  nxt <- nxt[rem_time - bfs_mat[pos, nxt] > 0]
+  nxt <- seq_along(flw)[-vstd][rt - bfs_mat[vstd[1], -vstd] > 0]
+  if (length(nxt) == 0L) return(flw[vstd[1]] * rt)
   
-  if (length(nxt) == 0L) return(list(cum_prs + flw[pos] * rem_time, c(visited, pos)))
-  
-  nxt_full <- lapply(nxt, \(x) sim_flw(x, c(visited, pos), rem_time - bfs_mat[pos, x], cach, cum_prs + flw[pos] * rem_time))
-  
-  if (cach) if (length(visited) > 4) gl_cach <<- c(gl_cach, nxt_full)
-  nxt_full[[which.max(sapply(nxt_full, \(x) x[[1]]))]]
+  flw[vstd[1]] * rt + max(sapply(nxt, \(x) sim_flw_bst(c(x, vstd), rt - bfs_mat[vstd[1], x])))
 }
 
 #part 1------
-sim_flw(1L, rem_time = 30L)[[1]] 
+sim_flw_bst(1L, rt = 30L)
+
 
 #part2-------
+sim_flw_all <- function(vstd, rt, cum_prs) {
+  
+  nxt <- seq_along(flw)[-vstd][rt - bfs_mat[vstd[1], -vstd] > 0]
+  if (length(nxt) == 0L) return(list(cum_prs + flw[vstd[1]] * rt, vstd))
+  
+  nxt_full <- lapply(nxt, \(x) sim_flw_all(c(x, vstd), rt - bfs_mat[vstd[1], x], cum_prs + flw[vstd[1]] * rt))
+  
+  if (length(vstd) > 4) gl_cach <<- c(gl_cach, nxt_full)
+  nxt_full[[which.max(sapply(nxt_full, \(x) x[[1]]))]]
+}
+
+
 gl_cach <- list()
-sim_flw(1L, rem_time = 26L, cach = TRUE)
+sim_flw_all(1L, rt = 26L, 0L)
 
 l1 <- unique(gl_cach)[order(sapply(unique(gl_cach), \(x) x[[1]]), decreasing = TRUE)[1:100]]
 res <- 0L
 
 for (x in l1) {
-  l2 <- l1[sapply(l1, \(y) !anyDuplicated(c(x[[2]][-1], y[[2]])))]
+  l2 <- l1[sapply(l1, \(y) !anyDuplicated(c(head(x[[2]], -1), y[[2]])))]
   if (length(l2) > 0) res <- max(res, x[[1]] + sapply(l2, \(y) y[[1]]))
 }
 res
+
