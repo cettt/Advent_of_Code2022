@@ -36,14 +36,27 @@ drop_sand <- function(rock) {
 
 drop_sand(rock)
 
-#part2-----------
-sand <- 500 + 0i
-for (im in 0:max(Im(rock)) + 1) {
-  z <- setdiff((-im):im + 500 + im*1i, rock)
-  idx <- apply(outer(z, sand[Im(sand) == im - 1], \(x, y) abs(x - y)), 1, \(x) min(x) < 2) 
-  sand <- c(sand, z[idx])
+#part2----------
+n_sand <- 1L
+snd <- 500L
+for (im in 0:max(Im(rock)) + 1L) {
+  hlp <- unique(c(snd, snd + 1, snd - 1L))
+  snd <- (-im):im + 500L
+  snd <- snd[match(snd, Re(rock[Im(rock) == im]), 0L) == 0L]
+  snd <- snd[snd %in% hlp]
+  n_sand <- n_sand + length(snd)
 }
 
-length(sand)
+n_sand
 
 
+
+#explanation part2:
+## after all units of sand have fallen, the sand forms a symmetric triangle.
+### the triangles top is at x = 500, y = 0 and the bottom is at max(y) + 1.
+### Every coordinate inside this triangle will be filled with sand unless is below 
+###    a long rock formation.
+### We fill the rock up starting from the top,
+###   the first layer (y = 0) has 1 unit of sand, the second layer (y = 1) has 2 units, etc
+###   to check whether a certain spot can be reached by sand, we check the previous layer of sand.
+#### 
