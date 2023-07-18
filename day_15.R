@@ -3,12 +3,15 @@ dist <- abs(data15[2, ] - data15[4, ]) + abs(data15[3, ] - data15[5, ])
 
 #part1------
 d0 <- dist - abs(data15[3,] - 2e6)
-x_tar <- lapply(seq_along(d0), \(k) if (d0[k] >= 0) (-d0[k]):d0[k] + data15[2,k])
+x_tar <- lapply(seq_along(d0), \(k) c(-d0[k], d0[k]) + data15[2,k])
+x_tar <- x_tar[d0 >= 0]
 
-length(setdiff(unique(unlist(x_tar)), data15[4, ][data15[5, ] == 2e6]))
+diff(range(unlist(x_tar))) + 1L - length(unique(data15[4, data15[5,] == 2e6]))
+# works as intervals in x_tar are disjoint
+
 
 #part2--------
-check_point <- \(xy) all(abs(data15[2,] - xy[1]) + abs(data15[3,] - xy[2]) > dist)
+check_point <- \(xy) all(colSums(abs(data15[2:3, ] - xy)) > dist)
 
 
 d1 <- data15[3, ] + dist + 1 + data15[2, ]
@@ -17,9 +20,7 @@ d2 <- data15[3, ] + dist + 1 - data15[2, ]
 for (k in seq_along(d1)) {
   for (l in seq_along(d1)[-k]) {
     xy <- (d1[k] + c(-d2[l], d2[l])) / 2
-    if (all(xy >= 0) & all(xy <= 4e6)) {
-      if (check_point(xy)) res <- sum(xy * c(4e6, 1))
-    }
+    if (all(xy >= 0) & all(xy <= 4e6)) if (check_point(xy)) res <- sum(xy * c(4e6, 1))
   }
 }
 
