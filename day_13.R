@@ -21,14 +21,10 @@ compare <- function(x, y) {
       if (!grepl("^\\[", x1[k]) & !grepl("^\\[", y1[k])) {
         if (as.integer(x1[k]) < as.integer(y1[k])) return(TRUE)
         if (as.integer(x1[k]) > as.integer(y1[k])) return(FALSE)
-      } else if (grepl("^\\[", x1[k]) & grepl("^\\[", y1[k])) {
-        com <- compare(x1[k], y1[k])
-        if (!is.na(com)) return(com)
-      } else if (grepl("^\\[", x1[k])) {
-        com <- compare(x1[k], paste0("[", y1[k], "]"))
-        if (!is.na(com)) return(com)
-      } else if (grepl("^\\[", y1[k])) {
-        com <- compare(paste0("[", x1[k], "]"), y1[k])
+      } else {
+        x2 <- if (grepl("^\\[", x1[k])) x1[k] else paste0("[", x1[k], "]")
+        y2 <- if (grepl("^\\[", y1[k])) y1[k] else paste0("[", y1[k], "]")
+        com <- compare(x2, y2)
         if (!is.na(com)) return(com)
       }
     }
