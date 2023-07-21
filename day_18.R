@@ -4,25 +4,36 @@ data18 <- unname(t(as.matrix(read.table("Input/day18.txt", sep = ","))))
 sum(apply(data18, 2, \(x) 6L - sum(colSums(abs(data18 - x)) == 1L)))
 
 #part2------
-data18_int <- colSums(data18 * 10L^(2:0 * 2L))
+dm <- apply(data18, 1, \(x) max(x) - min(x)) + 3L
+m <- dm[1]
+n <- dm[1] * dm[2]
 
-hlp <- \(x) seq.int(x[1] - 1L, x[2] + 1L)
-cube <- expand.grid(hlp(range(data18[1, ])), hlp(range(data18[2, ])), hlp(range(data18[3, ])))  
+obj_idx <- apply(data18 - apply(data18, 1, min) + 1L, 2L, \(x) sum(x * c(1L, m, n))) + 1L
 
-outside <- cube[cube[,1] %in% range(cube[,1]) | cube[,2] %in% range(cube[,2]) |
-                  cube[,3] %in% range(cube[,3]), ]
-
-cube_int <- unname(colSums(t(cube) * 10L^(2:0 * 2L)))
-
-outside <- unname(colSums(t(outside) * 10L^(2:0 * 2L)))
-j <- 1L
-
-while (j <= length(outside)) {
-  new_edge <- outside[j] + c(1L, -1L, 100L, -100L, 1e4L, -1e4L)
-  new_edge <- new_edge[match(new_edge, outside, 0L) == 0L]
-  new_edge <- new_edge[new_edge %in% cube_int & !new_edge %in% data18_int]
-  outside <- c(outside, new_edge)
-  j <- j + 1L
+lookup_n <- function(k) {
+  k + c(if (k %% m != 1L) -1L, if (k %% m != 0L) 1L,
+        if (k %% n > m) -m, if (k %% n <= n - m) m,
+        if (k > n) -n, if (k <= prod(dm) - n) n
+  )
 }
 
-sum(sapply(data18_int, \(x) sum(abs(outside - x) %in% 10L^(2:0 * 2L))))
+lookup <- lapply(seq_len(prod(dm)), lookup_n)
+outside <- which(sapply(lookup, \(x) length(x) < 6))
+cur <- outside
+
+while (length(cur) > 0) {
+  nxt <- unique(unlist(lookup[cur]))
+  cur <- nxt[match(nxt, c(outside, obj_idx), 0L) == 0L]
+  outside <- c(outside, cur)
+}
+sum(unlist(lookup[obj_idx]) %in% outside)
+
+#explanation:
+## we imagine that we put the object (obj) in a big cube that completely contains it.
+### the dimensions of that cube are given by dm
+###  we then fill the cube with water; on a technical level we are doing a bfs from outside
+###   of the object.
+### the only tricky part is to determine the indices of the cubes which belong to the object:
+###  therefore, we just interpret the big cube as three dimensional array and 
+###  shift the object such that bottom left corner of the cube is at 0,0,0.
+###    This can be achieved by shifting the object such that min(x) = 1, min(y) = 1 and min(z) = 1
