@@ -1,82 +1,50 @@
-data19 <- lapply(strsplit(gsub("\\D+", " ", readLines("Input/day19.txt")), " "), \(x) as.integer(x[-(1:2)]))
+data19 <- readLines("Input/day19.txt")
+cost <- sapply(regmatches(data19, gregexpr("\\d+ " , data19)), as.integer)
 
-cost <- lapply(data19, \(x) t(matrix(c(x[1], 0L, 0L, 0L, x[2], 0L, 0L, 0L,
-                                       x[3], x[4], 0L, 0L, x[5], 0L, x[6], 0L), byrow = TRUE, nrow = 4L)))
-
-optimize <- function(mat, rob, minute, cst, lookup = rep(0L, 24)) {
+f <- function(mat = integer(4), rob = c(1L, 0L, 0L, 0L), cst, minute, mx_tm) {
   
-  if (minute == 24L) return(mat[4] + rob[4])
+  if (minute == 1L) cur_best <<- 1L
   
-  if (rob[4] < lookup[minute]) {return(-1L)}
-  
-  #theoratical best----
-  if (mat[4] + sum((rob[4] + 0:(24L - minute)) * (25L - minute):1) <= cur_max) return(-Inf)
-  
-  #build robot phase------
-  nxt <- .Internal(which(colSums(matrix(cst[rob == 0L, ], ncol = 4) == 0L) == sum(rob == 0L)))
-  mat_mult <- pmax(apply(ceiling((cst[,nxt] - mat) / rob), 2L, max, na.rm = TRUE), 0L) + 1L
-  
-  res <- mat[4] + rob[4]
-  if (4L %in% nxt & c(mat_mult[nxt == 4L], 0L)[1] == 1L) {
-    lookup[minute:24] <- max(lookup)
-    res <- optimize(mat + rob - cst[,4], rob + diag(4)[,4], minute + 1L, cst, lookup)
+  if (minute == mx_tm) {
+    res <- mat[4] + rob[4]
+  } else if (mat[4] + (mx_tm + 1L - minute) * (rob[4] + (mx_tm - minute)/2L) < cur_best) {
+    return(-1L)
   } else {
-    for (k in seq_along(nxt)) {
-      if ((rob[nxt[k]] < max(cst[nxt[k],]) | nxt[k] == 4L) & minute + mat_mult[nxt[k]] <= 32) {
-        res <- max(res, optimize(mat + rob*mat_mult[k] - cst[,nxt[k]], rob + diag(4)[,nxt[k]], minute + mat_mult[k], cst, lookup))
-      }
+    tm <- ceiling(c(
+      (cst[1:2] - mat[1]) / rob[1],
+      max((cst[3:4] - mat[c(1, 2)]) / rob[c(1, 2)]),
+      max((cst[5:6] - mat[c(1, 3)]) / rob[c(1, 3)])
+    ))
+    
+    tm[1:3] <- ifelse(
+      mat[1:3] >= (c(max(cst[c(1:3, 5)]), cst[4], cst[6]) - rob[1:3]) * (mx_tm + 1L - minute),
+      99L, tm[1:3]
+    )
+    
+    tm <- pmax(0L, as.integer(pmin(99L, tm))) + 1L
+    nxt <- .Internal(which(tm < mx_tm + 1L - minute))
+    
+    if (length(nxt) > 0) { 
+      hlp <- matrix(rep.int(0L, 16L), 4, 4)
+      hlp[c(1L, 5L, 9L, 10L, 13L, 15L)] <- cst
+      res <- max(sapply(nxt, \(k) f(mat + tm[k] * rob - hlp[, k], rob + diag(4)[, k], cst, minute + tm[k], mx_tm)))
+    } else {
+      res <- mat[4] + rob[4] * (mx_tm + 1L - minute)
     }
   }
-  if (res  > cur_max) cur_max <<- res
+  
+  if (res > cur_best) cur_best <<- res
   return(res)
 }
 
+#part1---------
+res <- apply(cost, 2, \(x) f(cst = x, minute = 1L, mx_tm = 24L))
+sum(res * seq_along(res))
 
-#---------
-res <- integer(length(data19))
-for (k in seq_along(res)) {
-  cur_max <- 0L
-  res[k] <- optimize(c(0L, 0L, 0L, 0L), c(1L, 0L, 0L, 0L), 1L, cost[[k]])
-  
-}
+#part2-----------
+prod(apply(cost[,1:3], 2, \(x) f(cst = x, minute = 1L, mx_tm = 32L)))
 
-sum(res*seq_along(res))
-
-
-#part2----------
-optimize2 <- function(mat, rob, minute, cst, lookup = rep(0L, 32)) {
-  
-  if (minute == 32L) return(mat[4] + rob[4])
-  
-  if (rob[4] < lookup[minute]) {return(-1L)}
-  
-  #theoratical best----
-  if (mat[4] + sum((rob[4] + 0:(32L - minute)) * (33L - minute):1) <= cur_max) return(-Inf)
-  
-  #build robot phase------
-  nxt <- .Internal(which(colSums(matrix(cst[rob == 0L, ], ncol = 4) == 0L) == sum(rob == 0L)))
-  mat_mult <- pmax(apply(ceiling((cst[,nxt] - mat) / rob), 2L, max, na.rm = TRUE), 0L) + 1L
-  
-  res <- mat[4] + rob[4]
-  if (4L %in% nxt & c(mat_mult[nxt == 4L], 0L)[1] == 1L) {
-    lookup[minute:32] <- max(lookup)
-    res <- optimize2(mat + rob - cst[,4], rob + diag(4)[,4], minute + 1L, cst, lookup)
-  } else {
-    for (k in seq_along(nxt)) {
-      if ((rob[nxt[k]] < max(cst[nxt[k],]) | nxt[k] == 4L) & minute + mat_mult[nxt[k]] <= 32) {
-        res <- max(res, optimize2(mat + rob*mat_mult[k] - cst[,nxt[k]], rob + diag(4)[,nxt[k]], minute + mat_mult[k], cst, lookup))
-      }
-    }
-  }
-  if (res  > cur_max) cur_max <<- res
-  return(res)
-}
-
-res <- integer(3)
-for (k in seq_along(res)) {
-  cur_max <- 0L
-  res[k] <- optimize2(c(0L, 0L, 0L, 0L), c(1L, 0L, 0L, 0L), 1L, cost[[k]])
-  
-}
-
-prod(res)
+#theoretical best
+#given that we are at time t and have g geodes and r geode robots, the upper bound for
+#  geodes at time T is given by g + (r) + (r + 1) + (r + 2) +... + (r + T -t) =
+#    = g + (T - t + 1) * (r + (T-t)/2)
