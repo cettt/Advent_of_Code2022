@@ -14,7 +14,7 @@ library which provides high performance container types (in particular
 priority queues).
 
 Some solutions are still not optimal, especially Days 19, 23 (long run
-time), and
+time), and Day 22 (messy code).
 
 I try to go for fast and short solutions which means that the resulting
 code is not always as easy to read as it could be.
