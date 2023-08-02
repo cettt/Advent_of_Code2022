@@ -3,7 +3,7 @@
 
 # Summary
 
-Advent of Code is annual event which consits of daily programming
+Advent of Code is annual event which consists of daily programming
 puzzles. The event is hosted by [Eric Wastl](http://was.tl/) and takes
 place between December 1st and December 25th.
 
@@ -13,8 +13,8 @@ require base packages. For Day 12 I used the
 library which provides high performance container types (in particular
 priority queues).
 
-Some solutions are still not optimal, especially Days 19, 23 (long run
-time), and Day 22 (messy code).
+Some solutions are still not optimal, especially Day 23 (long run time),
+and Day 22 (messy code).
 
 I try to go for fast and short solutions which means that the resulting
 code is not always as easy to read as it could be.
