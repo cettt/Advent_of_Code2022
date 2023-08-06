@@ -13,8 +13,7 @@ require base packages. For Day 12 I used the
 library which provides high performance container types (in particular
 priority queues).
 
-Some solutions are still not optimal, especially Day 23 (long run time),
-and Day 22 (messy code).
+Some solutions are still not optimal, especially Day 23 (long run time).
 
 I try to go for fast and short solutions which means that the resulting
 code is not always as easy to read as it could be.
