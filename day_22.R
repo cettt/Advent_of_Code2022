@@ -1,10 +1,7 @@
-data22 <- readLines("Input/day22.txt")
-fld <- read.fwf("Input/day22.txt", widths = rep(1, 150), strip.white = F, comment.char = ";", n = 200)
-pos_str <- strsplit(gsub("(L|R)", "\\1 ", data22[length(data22)]), " ")[[1]]
+data22 <- strsplit(gsub("(L|R)", "\\1 ", tail(readLines("Input/day22.txt"), 1)), " ")[[1]]
+cube <- read.fwf("Input/day22.txt", widths = rep(1, 150), strip.white = F, comment.char = ";", n = 200)
 
-co <-  apply(which(fld == ".", arr.ind = TRUE), 1, \(x) x[2] + x[1]*1i)
-blk <- apply(which(fld == "#", arr.ind = TRUE), 1, \(x) x[2] + x[1]*1i)
-
+co <-  apply(which(cube == ".", arr.ind = TRUE), 1, \(x) x[2] + x[1]*1i)
 
 tm1 <- rbind(
   cbind(150 + 1:50    * 1i, 51 + 1:50    * 1i, 1, 1),
@@ -25,24 +22,22 @@ walk <- function(tm) {
   pos <- min(Re(co[Im(co) == min(Im(co))])) + min(Im(co))*1i
   dir <- 1
   
-  for (x in pos_str) {
-    n <- as.integer(sub("\\D", "", x)) 
-    while (n > 0L) {
+  for (cmd in data22) {
+    n_stp <- as.integer(sub("\\D", "", cmd)) 
+    while (n_stp > 0) {
       co2 <- if (Re(dir) != 0 ) co[Im(co) == Im(pos)] else co[Re(co) == Re(pos)]
-      stp_tkn <- Position(\(x) !x %in% co2, pos + seq_len(n)*dir, nomatch = n + 1)
+      stp_tkn <- Position(\(x) !x %in% co2, pos + seq_len(n_stp)*dir, nomatch = n_stp + 1L)
       pos <- pos + (stp_tkn - 1L) * dir
       
-      if (((pos + dir) %in% blk) | (stp_tkn == n + 1L)) break else {
-        new_pos <- tm[tm[, 1] == pos & tm[, 3] == dir, ]
-        if (length(new_pos) > 0) {
-          pos <- new_pos[2]
-          dir <- new_pos[4]
-          n <- n - stp_tkn
-        } else break
-      }
+      new_pos <- tm[tm[, 1] == pos & tm[, 3] == dir, ]
+      if (length(new_pos) > 0 & stp_tkn <= n_stp) {
+        pos <- new_pos[2]
+        dir <- new_pos[4]
+        n_stp <- n_stp - stp_tkn
+      } else break
     }
-    dir <- dir * if (grepl("R", x)) 1i else if (grepl("L", x)) -1i else 1
-  }  
+    dir <- dir * if (grepl("R", cmd)) 1i else if (grepl("L", cmd)) -1i else 1
+  }
   Im(pos)*1000 + Re(pos)*4 + ifelse(dir == 1, 0, ifelse(dir == -1, 2, ifelse(dir == 1i, 1, 3)))
 }
 
@@ -61,3 +56,18 @@ tm2 <- rbind(
 )
 
 walk(tm2)
+
+#explanation------
+#the objects tm1 and tm2 are transportation matrices and show how the edges are connected
+##  column one contains the starting coordinates
+##  column two contains the target coordinates
+##  column three contains the starting direction
+##  column four contains the direction after reaching the target
+##  for part 2 we enumerate the sides of the cube as follows
+
+###  .21
+###  .3.
+###  65.
+###  4..
+
+## the comments in the definition of tm2 show which side is connected to which side
