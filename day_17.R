@@ -39,4 +39,4 @@ k2 <- Reduce(intersect, lapply(0:4, \(k) which(duplicated(rep_vec[seq_len(2022) 
 k1 <- which(rep_vec == rep_vec[k2])[1]
 
 
-sprintf("%.f", h_vec[(reps - k1) %% (k2 - k1) + k1] + floor((reps - k1) / (k2 - k1)) * diff(h_vec[c(k1, k2)]))
+sprintf("%.f", h_vec[(reps - k1) %% (k2 - k1) + k1] + (reps - k1) %/% (k2 - k1) * diff(h_vec[c(k1, k2)]))

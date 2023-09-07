@@ -9,7 +9,7 @@ build_simple <- function(mat, rob, cst, minute, mx_tm) {
   rc <- pmin(rob[2] + seq_len(mx_tm - minute) - 1L, cst[4])
   mc <- mat[2] + cumsum(c(0L, rc))
   
-  ro <- pmin(rob[3] + c(0L, as.integer(floor(mc / cst[4]))), cst[6])
+  ro <- pmin(rob[3] + c(0L, mc %/% cst[4]), cst[6])
   mo <- mat[3] + cumsum(c(0L, ro))
   
   rg <- rob[4] + c(0L, as.integer(floor(mo / cst[6])))
